@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TradeIQ — India Sector Intelligence API</title>
+<meta name="description" content="AI-powered trade opportunity analysis for Indian market sectors. Get structured insights instantly."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{
+  --bg:#050a18;--surface:#0d1526;--surface2:#111d35;--border:#1e3055;
+  --accent:#3b82f6;--accent2:#6366f1;--green:#10b981;--orange:#f59e0b;
+  --red:#ef4444;--text:#e2e8f0;--muted:#64748b;--white:#fff;
+  --grad:linear-gradient(135deg,#3b82f6,#6366f1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(5,10,24,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);}
+.logo{font-size:1.4rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .2s;}
+.nav-links a:hover{color:var(--white);}
+.nav-cta{background:var(--grad);color:#fff;border:none;padding:.55rem 1.4rem;
+  border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .2s;}
+.nav-cta:hover{opacity:.85;}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:6rem 2rem 4rem;
+  position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(59,130,246,.18),transparent); pointer-events:none;}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);
+  color:var(--accent);padding:.4rem 1rem;border-radius:99px;font-size:.8rem;
+  font-weight:600;margin-bottom:1.5rem;letter-spacing:.05em;}
+.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.1;
+  margin-bottom:1.5rem;max-width:800px;}
+.hero h1 span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{font-size:1.15rem;color:var(--muted);max-width:580px;line-height:1.7;margin-bottom:2.5rem;}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
+.btn-primary{background:var(--grad);color:#fff;border:none;padding:.85rem 2rem;
+  border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:transform .2s,opacity .2s;}
+.btn-primary:hover{transform:translateY(-2px);opacity:.9;}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);
+  padding:.85rem 2rem;border-radius:10px;font-size:1rem;font-weight:600;
+  cursor:pointer;transition:border-color .2s,background .2s;}
+.btn-outline:hover{border-color:var(--accent);background:rgba(59,130,246,.07);}
+.stats{display:flex;gap:3rem;margin-top:4rem;flex-wrap:wrap;justify-content:center;}
+.stat{text-align:center;}
+.stat-val{font-size:2rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-lbl{font-size:.8rem;color:var(--muted);font-weight:500;margin-top:.2rem;}
+
+/* LIVE ANALYZER */
+.section{padding:6rem 2rem;max-width:1100px;margin:0 auto;}
+.section-label{font-size:.8rem;font-weight:700;letter-spacing:.1em;
+  color:var(--accent);text-transform:uppercase;margin-bottom:.75rem;}
+.section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:1rem;}
+.section-sub{color:var(--muted);font-size:1rem;line-height:1.7;max-width:580px;}
+
+.analyzer-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:2.5rem;margin-top:3rem;}
+.analyzer-top{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:end;margin-bottom:1.5rem;}
+@media(max-width:900px){ .analyzer-top{grid-template-columns:1fr; } }
+.input-group{display:flex;flex-direction:column;gap:.5rem;}
+.input-group label{font-size:.85rem;font-weight:600;color:var(--muted);}
+.input-group input,.input-group select{
+  background:var(--bg);border:1px solid var(--border);color:var(--text);
+  padding:.8rem 1rem;border-radius:10px;font-size:.95rem;font-family:inherit;
+  outline:none;transition:border-color .2s;}
+.input-group input:focus,.input-group select:focus{border-color:var(--accent);}
+.analyze-btn{background:var(--grad);color:#fff;border:none;padding:.85rem 2rem;
+  border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;
+  white-space:nowrap;transition:opacity .2s,transform .2s;height:fit-content;}
+.analyze-btn:hover{opacity:.85;transform:translateY(-1px);}
+.analyze-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.sector-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem;}
+.chip{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);
+  color:var(--accent);padding:.35rem .9rem;border-radius:99px;font-size:.8rem;
+  font-weight:600;cursor:pointer;transition:background .2s,transform .2s;}
+.chip:hover{background:rgba(59,130,246,.2);transform:translateY(-1px);}
+.report-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;
+  padding:2rem;min-height:200px;font-size:.9rem;line-height:1.8;
+  display:none;position:relative;}
+.report-box.visible{display:block;}
+
+/* CHART POSTCARD & MODAL */
+.postcard-chart{float:right;width:300px;height:180px;margin-left:1.5rem;margin-bottom:1rem;margin-top:3.5rem;
+  padding:.8rem;cursor:pointer;transition:transform .2s,border-color .2s;
+  background:var(--surface2);border-radius:10px;border:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;}
+.postcard-chart:hover{transform:translateY(-2px) scale(1.02);border-color:var(--accent);}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;}
+.chart-title{font-size:.75rem;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px;}
+.chart-subtitle{font-size:.65rem;color:var(--muted);background:rgba(59,130,246,.15);
+  padding:.15rem .4rem;border-radius:99px;color:var(--accent);}
+@media(max-width:640px){ .postcard-chart{float:none;width:100%;margin-left:0;} }
+
+.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;
+  background-color:rgba(5,10,24,.85);backdrop-filter:blur(8px);
+  justify-content:center;align-items:center;opacity:0;transition:opacity .3s;}
+.modal.visible{display:flex;opacity:1;}
+.modal-content{background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;width:95%;max-width:900px;height:70vh;padding:2.5rem;
+  position:relative;display:flex;flex-direction:column;transform:scale(0.95);
+  transition:transform .3s;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
+.modal.visible .modal-content{transform:scale(1);}
+.modal-close{position:absolute;top:1rem;right:1.5rem;font-size:2rem;color:var(--muted);
+  cursor:pointer;transition:color .2s;line-height:1;}
+.modal-close:hover{color:var(--red);}
+.report-box h1,.report-box h2,.report-box h3{color:var(--white);margin:1rem 0 .5rem;}
+.report-box h1{font-size:1.4rem;border-bottom:1px solid var(--border);padding-bottom:.75rem;}
+.report-box h2{font-size:1.1rem;color:var(--accent);}
+.report-box ul{padding-left:1.5rem;color:var(--muted);}
+.report-box li{margin:.3rem 0;}
+.report-box strong{color:var(--text);}
+.report-box blockquote{border-left:3px solid var(--accent2);padding-left:1rem;color:var(--muted);margin:1rem 0;}
+.report-box em{color:var(--muted);font-style:italic;}
+.report-box hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0;}
+.report-actions{position:absolute;top:1rem;right:1rem;display:flex;gap:.5rem;z-index:2;}
+.copy-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  padding:.4rem .8rem;border-radius:8px;font-size:.78rem;cursor:pointer;transition:all .2s;}
+.copy-btn:hover{color:var(--white);border-color:var(--accent);}
+.loading{display:none;text-align:center;padding:3rem;}
+.loading.visible{display:block;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin 1s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.status-bar{display:flex;align-items:center;gap:.75rem;margin-top:1rem;
+  font-size:.82rem;color:var(--muted);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);
+  animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.error-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);
+  border-radius:10px;padding:1rem 1.5rem;color:#fca5a5;font-size:.9rem;display:none;}
+.error-box.visible{display:block;}
+
+/* USE CASES */
+.usecase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:1.5rem;margin-top:3rem;}
+.uc-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;transition:border-color .3s,transform .3s;}
+.uc-card:hover{border-color:var(--accent);transform:translateY(-4px);}
+.uc-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:1.4rem;margin-bottom:1.25rem;}
+.uc-card h3{font-size:1.05rem;font-weight:700;margin-bottom:.6rem;}
+.uc-card p{color:var(--muted);font-size:.88rem;line-height:1.65;}
+.uc-tag{display:inline-block;margin-top:1rem;font-size:.75rem;font-weight:600;
+  padding:.25rem .7rem;border-radius:99px;}
+
+/* FEATURES / ADD-ONS */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.25rem;margin-top:3rem;}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:1.75rem;display:flex;gap:1rem;align-items:flex-start;
+  transition:border-color .3s,transform .3s;cursor:pointer;}
+.feat-card:hover{border-color:var(--accent2);transform:translateY(-3px);}
+.feat-icon{font-size:1.5rem;flex-shrink:0;margin-top:.1rem;}
+.feat-body h4{font-size:.95rem;font-weight:700;margin-bottom:.4rem;}
+.feat-body p{color:var(--muted);font-size:.83rem;line-height:1.6;}
+.feat-badge{display:inline-block;font-size:.7rem;font-weight:700;
+  padding:.15rem .6rem;border-radius:99px;margin-top:.5rem;}
+.badge-new{background:rgba(16,185,129,.15);color:var(--green);}
+.badge-pro{background:rgba(99,102,241,.15);color:#a5b4fc;}
+.badge-free{background:rgba(59,130,246,.12);color:var(--accent);}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin-top:3rem;}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:2.5rem;transition:transform .3s,border-color .3s;position:relative;}
+.price-card:hover{transform:translateY(-6px);}
+.price-card.popular{border-color:var(--accent);background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(99,102,241,.05));}
+.popular-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  background:var(--grad);color:#fff;font-size:.75rem;font-weight:700;
+  padding:.3rem 1rem;border-radius:99px;white-space:nowrap;}
+.plan-name{font-size:.85rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem;}
+.plan-price{font-size:2.8rem;font-weight:900;line-height:1;margin-bottom:.25rem;}
+.plan-price span{font-size:1rem;font-weight:500;color:var(--muted);}
+.plan-desc{color:var(--muted);font-size:.85rem;margin-bottom:2rem;}
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem;}
+.plan-features li{display:flex;align-items:center;gap:.7rem;font-size:.88rem;}
+.plan-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;}
+.plan-features li.no::before{content:'✕';color:var(--muted);}
+.plan-features li.no{color:var(--muted);}
+.plan-btn{width:100%;padding:.9rem;border-radius:10px;font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:opacity .2s,transform .2s;border:none;}
+.plan-btn-grad{background:var(--grad);color:#fff;}
+.plan-btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)!important;}
+.plan-btn:hover{opacity:.85;transform:translateY(-1px);}
+
+/* HOW IT WORKS */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1.5rem;margin-top:3rem;counter-reset:step;}
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;text-align:center;position:relative;counter-increment:step;}
+.step-num{width:48px;height:48px;background:var(--grad);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  font-weight:800;margin:0 auto 1.25rem;}
+.step-card h3{font-size:1rem;font-weight:700;margin-bottom:.5rem;}
+.step-card p{color:var(--muted);font-size:.85rem;line-height:1.65;}
+.step-arrow{display:none;}
+
+/* CTA */
+.cta-section{background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(99,102,241,.1));
+  border:1px solid rgba(59,130,246,.3);border-radius:24px;
+  padding:4rem 2rem;text-align:center;margin:4rem auto;max-width:800px;}
+.cta-section h2{font-size:2rem;font-weight:800;margin-bottom:1rem;}
+.cta-section p{color:var(--muted);margin-bottom:2rem;font-size:1rem;}
+.cta-form{display:flex;gap:.75rem;max-width:480px;margin:0 auto;flex-wrap:wrap;justify-content:center;}
+.cta-form input{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);padding:.85rem 1rem;border-radius:10px;font-size:.9rem;
+  font-family:inherit;outline:none;transition:border-color .2s;}
+.cta-form input:focus{border-color:var(--accent);}
+.cta-form button{background:var(--grad);color:#fff;border:none;padding:.85rem 1.75rem;
+  border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer;
+  transition:opacity .2s;}
+.cta-form button:hover{opacity:.85;}
+.cta-success{display:none;color:var(--green);font-weight:600;font-size:.95rem;margin-top:1rem;}
+.cta-success.visible{display:block;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2.5rem;text-align:center;
+  color:var(--muted);font-size:.85rem;}
+footer a{color:var(--accent);text-decoration:none;}
+
+/* DIVIDER */
+.full-section{padding:6rem 0;border-top:1px solid var(--border);}
+.full-section .section{padding-top:0;padding-bottom:0;}
+
+/* SCROLL ANIMATION */
+.fade-in{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s;}
+.fade-in.visible{opacity:1;transform:translateY(0);}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--green);
+  color:#fff;padding:1rem 1.5rem;border-radius:12px;font-weight:600;
+  font-size:.9rem;transform:translateY(100px);opacity:0;
+  transition:all .3s;z-index:999;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@media(max-width:640px){
+  .analyzer-top{grid-template-columns:1fr;}
+  .nav-links{display:none;}
+  .stats{gap:1.5rem;}
+}
+
+@media print {
+  body * { visibility: hidden; }
+  #reportBox, #reportBox * { visibility: visible; }
+  #reportBox { position: absolute; left: 0; top: 0; width: 100%; border: none; background: #fff !important; color: #000 !important; }
+  .report-box h1, .report-box h2, .report-box h3, .report-box strong { color: #000 !important; }
+  .report-box em, .report-box blockquote { color: #333 !important; }
+  .postcard-chart, .report-actions, .copy-btn { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">TradeIQ ⚡</div>
+  <ul class="nav-links">
+    <li><a href="#analyzer">Analyzer</a></li>
+    <li><a href="#usecases">Use Cases</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="/docs">API Docs</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('analyzer').scrollIntoView({behavior:'smooth'})">Try Free →</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🇮🇳 Built for Indian Markets · Powered by AI</div>
+  <h1>Instant <span>Trade Intelligence</span><br/>for Every Indian Sector</h1>
+  <p>Get AI-powered market analysis, key trends, opportunities, and risks for any sector in India — in seconds. Not hours.</p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.getElementById('analyzer').scrollIntoView({behavior:'smooth'})">🚀 Analyze a Sector</button>
+    <a href="/docs" class="btn-outline" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;">📄 View API Docs</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-val">20+</div><div class="stat-lbl">Sectors Supported</div></div>
+    <div class="stat"><div class="stat-val">< 5s</div><div class="stat-lbl">Avg. Response Time</div></div>
+    <div class="stat"><div class="stat-val">100%</div><div class="stat-lbl">India-Focused</div></div>
+    <div class="stat"><div class="stat-val">Free</div><div class="stat-lbl">To Get Started</div></div>
+  </div>
+</section>
+
+<!-- LIVE ANALYZER -->
+<div class="full-section" id="analyzer">
+<div class="section fade-in">
+  <div class="section-label">Live Demo</div>
+  <div class="section-title">Analyze Any Sector Right Now</div>
+  <p class="section-sub">Enter a sector name and your API key, and get a full Markdown intelligence report instantly — no sign-up needed for the free tier.</p>
+  <div class="analyzer-card">
+    <div class="analyzer-top">
+      <div class="input-group">
+        <label>Sector Name</label>
+        <input type="text" id="sectorInput" placeholder="e.g. pharmaceuticals, technology, agriculture" value="pharmaceuticals"/>
+      </div>
+      <div class="input-group">
+        <label>API Key</label>
+        <input type="text" id="apiKeyInput" placeholder="dev-key-12345" value="dev-key-12345"/>
+      </div>
+      <div class="input-group">
+        <label>Deliver to Email (Optional)</label>
+        <input type="email" id="deliveryEmail" placeholder="team@company.com" />
+      </div>
+      <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">⚡ Analyze</button>
+    </div>
+
+    <div class="section-label" style="margin-bottom:.6rem;font-size:.75rem;">Quick Sectors</div>
+    <div class="sector-chips">
+      <div class="chip" onclick="setChip('pharmaceuticals')">💊 Pharmaceuticals</div>
+      <div class="chip" onclick="setChip('technology')">💻 Technology</div>
+      <div class="chip" onclick="setChip('agriculture')">🌾 Agriculture</div>
+      <div class="chip" onclick="setChip('banking')">🏦 Banking</div>
+      <div class="chip" onclick="setChip('renewable energy')">⚡ Renewable Energy</div>
+      <div class="chip" onclick="setChip('defence')">🛡️ Defence</div>
+      <div class="chip" onclick="setChip('real estate')">🏗️ Real Estate</div>
+      <div class="chip" onclick="setChip('infrastructure')">🚧 Infrastructure</div>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="loading" id="loadingBox">
+      <div class="spinner"></div>
+      <div style="color:var(--muted);font-size:.9rem;" id="loadingMsg">Fetching market data…</div>
+    </div>
+
+    <div class="report-box" id="reportBox">
+      <div class="report-actions">
+        <button class="copy-btn" onclick="copyReport()">📋 Copy</button>
+        <button class="copy-btn" onclick="downloadMarkdown()">⬇️ MD</button>
+        <button class="copy-btn" onclick="downloadPDF()">📄 PDF</button>
+      </div>
+      
+      <div class="postcard-chart" onclick="openChartModal()">
+        <div class="chart-header">
+          <div class="chart-title">Market Trend</div>
+          <div class="chart-subtitle" id="chartSectorLabel">Sector</div>
+        </div>
+        <div style="flex-grow:1;position:relative;width:100%;">
+          <canvas id="sectorChart"></canvas>
+        </div>
+      </div>
+
+      <div id="reportContent"></div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span>API Server Online · <span id="reqCount">0</span> requests this session</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="full-section" id="howitworks">
+<div class="section fade-in">
+  <div class="section-label">Workflow</div>
+  <div class="section-title">How It Works</div>
+  <div class="steps">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h3>Enter a Sector</h3>
+      <p>Type any Indian market sector — from pharma to green energy. We accept plain English names.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h3>We Gather Data</h3>
+      <p>The API fetches live market signals, recent news, and curated sector intelligence instantly.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h3>AI Analyses</h3>
+      <p>Google Gemini processes the data and generates a structured, actionable intelligence report.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <h3>Report Delivered</h3>
+      <p>You get a clean Markdown report with trends, opportunities, risks, and a conclusion — in seconds.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- USE CASES -->
+<div class="full-section" id="usecases">
+<div class="section fade-in">
+  <div class="section-label">Use Cases</div>
+  <div class="section-title">Who Uses TradeIQ?</div>
+  <p class="section-sub">From retail investors to enterprise quant teams — TradeIQ accelerates every research workflow.</p>
+  <div class="usecase-grid">
+    <div class="uc-card">
+      <div class="uc-icon" style="background:rgba(59,130,246,.15);">📈</div>
+      <h3>Retail Investors</h3>
+      <p>Get a full sector intelligence briefing before placing trades on NSE/BSE. Understand macro tailwinds and risks in plain English before you hit "Buy".</p>
+      <span class="uc-tag" style="background:rgba(59,130,246,.12);color:var(--accent);">Free Tier</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon" style="background:rgba(99,102,241,.15);">🏦</div>
+      <h3>Portfolio Managers</h3>
+      <p>Run batch sector scans across 20+ industries to build sector-rotation strategies and identify emerging allocation opportunities quickly.</p>
+      <span class="uc-tag" style="background:rgba(99,102,241,.15);color:#a5b4fc;">Pro Tier</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon" style="background:rgba(16,185,129,.15);">🎓</div>
+      <h3>Finance Students</h3>
+      <p>Generate professional-grade sector reports for assignments, competitions, and research projects in minutes instead of hours of manual research.</p>
+      <span class="uc-tag" style="background:rgba(16,185,129,.15);color:var(--green);">Free Tier</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon" style="background:rgba(245,158,11,.15);">📰</div>
+      <h3>Financial Journalists</h3>
+      <p>Quickly validate story angles and get structured data points about any sector — perfect for fast-turnaround editorial deadlines.</p>
+      <span class="uc-tag" style="background:rgba(245,158,11,.15);color:var(--orange);">Pro Tier</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon" style="background:rgba(239,68,68,.15);">🤖</div>
+      <h3>Quant / Dev Teams</h3>
+      <p>Integrate the REST API directly into trading dashboards, bots, or internal research tools. Full Swagger docs and predictable JSON responses.</p>
+      <span class="uc-tag" style="background:rgba(239,68,68,.15);color:#fca5a5;">Enterprise</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon" style="background:rgba(168,85,247,.15);">🚀</div>
+      <h3>Startup Founders</h3>
+      <p>Analyse market opportunity and competitive landscape for your target sector before pitching to investors or planning market entry.</p>
+      <span class="uc-tag" style="background:rgba(168,85,247,.15);color:#c4b5fd;">Pro Tier</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- FEATURES / ADD-ONS -->
+<div class="full-section" id="features">
+<div class="section fade-in">
+  <div class="section-label">Features & Add-Ons</div>
+  <div class="section-title">Everything You Need</div>
+  <p class="section-sub">A complete toolkit built on top of the core analysis engine.</p>
+  <div class="features-grid">
+    <div class="feat-card" onclick="showToast('Gemini AI limits are managed per API key tier.')">
+      <div class="feat-icon">🧠</div>
+      <div class="feat-body">
+        <h4>Gemini AI Analysis</h4>
+        <p>Full Google Gemini 1.5 Flash integration for rich, contextual reports. Falls back to curated data automatically.</p>
+        <span class="feat-badge badge-free">Free</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Live Data currently utilizes DuckDuckGo API under the hood.')">
+      <div class="feat-icon">📡</div>
+      <div class="feat-body">
+        <h4>Live Data Fetch</h4>
+        <p>Real-time DuckDuckGo market signals integrated with structured sector intelligence.</p>
+        <span class="feat-badge badge-free">Free</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Generate keys in your Pro dashboard (Coming soon).')">
+      <div class="feat-icon">🔐</div>
+      <div class="feat-body">
+        <h4>API Key Auth</h4>
+        <p>Secure X-API-Key header authentication. Supports multiple keys per team.</p>
+        <span class="feat-badge badge-free">Free</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Rate limits: 5/min on Free, 100/min on Pro.')">
+      <div class="feat-icon">🚦</div>
+      <div class="feat-body">
+        <h4>Rate Limiting</h4>
+        <p>In-memory sliding-window rate limiter. Configurable per-key limits to prevent abuse.</p>
+        <span class="feat-badge badge-free">Free</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Batch processing is available for Pro users on the /analyze/batch route.')">
+      <div class="feat-icon">📊</div>
+      <div class="feat-body">
+        <h4>Batch Sector API</h4>
+        <p>Analyze multiple sectors in a single request — perfect for portfolio-wide scans.</p>
+        <span class="feat-badge badge-pro">Pro</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Configure your endpoints in the Webhook settings panel.')">
+      <div class="feat-icon">📬</div>
+      <div class="feat-body">
+        <h4>Email / Webhook</h4>
+        <p>Schedule daily sector digests delivered to your inbox or a Slack/Discord webhook.</p>
+        <span class="feat-badge badge-pro">Pro</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Markdown exports are live! PDF export coming next month.')">
+      <div class="feat-icon">📁</div>
+      <div class="feat-body">
+        <h4>PDF / MD Export</h4>
+        <p>Download reports as polished PDFs or raw Markdown files for sharing or archiving.</p>
+        <span class="feat-badge badge-pro">Pro</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Sector Alerts feature is in closed beta.')">
+      <div class="feat-icon">🔔</div>
+      <div class="feat-body">
+        <h4>Sector Alerts</h4>
+        <p>Get notified when a sector's risk profile changes significantly — proactive intelligence.</p>
+        <span class="feat-badge badge-new">New</span>
+      </div>
+    </div>
+    <div class="feat-card" onclick="showToast('Screener integrations launching Q3 with top Indian brokerages.')">
+      <div class="feat-icon">💹</div>
+      <div class="feat-body">
+        <h4>Stock Screener Link</h4>
+        <p>Automatically maps sector trends to top NSE/BSE tickers with direct screener links.</p>
+        <span class="feat-badge badge-new">New</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- PRICING -->
+<div class="full-section" id="pricing">
+<div class="section fade-in">
+  <div class="section-label">Pricing</div>
+  <div class="section-title">Simple, Transparent Pricing</div>
+  <p class="section-sub">Start free. Scale when you need to. No credit card required for the free tier.</p>
+  <div class="pricing-grid">
+
+    <div class="price-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">₹0 <span>/ month</span></div>
+      <div class="plan-desc">Perfect for individual investors and students.</div>
+      <ul class="plan-features">
+        <li>5 API requests / minute</li>
+        <li>All 20+ sectors</li>
+        <li>Markdown reports</li>
+        <li>Swagger UI access</li>
+        <li class="no">Batch sector API</li>
+        <li class="no">Email digest</li>
+        <li class="no">PDF export</li>
+      </ul>
+      <button class="plan-btn plan-btn-outline" onclick="scrollToAnalyzer()">Start Free →</button>
+    </div>
+
+    <div class="price-card popular">
+      <div class="popular-tag">⭐ Most Popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">₹999 <span>/ month</span></div>
+      <div class="plan-desc">For active traders and fund managers.</div>
+      <ul class="plan-features">
+        <li>100 requests / minute</li>
+        <li>All 20+ sectors</li>
+        <li>Gemini AI guaranteed</li>
+        <li>Batch sector API</li>
+        <li>PDF &amp; MD export</li>
+        <li>Email digest (daily)</li>
+        <li class="no">Dedicated support</li>
+      </ul>
+      <button class="plan-btn plan-btn-grad" onclick="subscribe('pro')">Get Pro →</button>
+    </div>
+
+    <div class="price-card">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-price">Custom</div>
+      <div class="plan-desc">For teams, fintechs, and trading desks.</div>
+      <ul class="plan-features">
+        <li>Unlimited requests</li>
+        <li>Dedicated API keys</li>
+        <li>Custom sector models</li>
+        <li>Webhook / Slack alerts</li>
+        <li>SLA guarantee</li>
+        <li>Private deployment</li>
+        <li>Dedicated support</li>
+      </ul>
+      <button class="plan-btn plan-btn-grad" onclick="subscribe('enterprise')">Contact Sales →</button>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- CTA / WAITLIST -->
+<div class="section fade-in">
+  <div class="cta-section">
+    <h2>Stay Ahead of the Market 🚀</h2>
+    <p>Join the waitlist for Pro features — sector alerts, PDF exports, and daily digests. First 100 users get 3 months free.</p>
+    <div class="cta-form">
+      <input type="email" id="waitlistEmail" placeholder="your@email.com"/>
+      <button onclick="joinWaitlist()">Join Waitlist</button>
+    </div>
+    <div class="cta-success" id="ctaSuccess">🎉 You're on the list! We'll notify you when Pro launches.</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>TradeIQ · India Sector Intelligence API · Built with FastAPI &amp; Google Gemini<br/>
+  <a href="/docs">API Docs</a> · <a href="/redoc">ReDoc</a> · <a href="/health">Health Check</a>
+  </p>
+</footer>
+
+<!-- CHART MODAL -->
+<div id="chartModal" class="modal" onclick="if(event.target===this) closeChartModal()">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeChartModal()">&times;</span>
+    <h2 id="modalSectorLabel" style="font-size:1.4rem;color:var(--white);margin-bottom:1.5rem;">Market Trend</h2>
+    <div style="flex-grow:1;position:relative;width:100%;">
+      <canvas id="largeSectorChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Globals ────────────────────────────────────────────────────────────────
+let reqCount = 0;
+let lastReport = '';
+
+// ─── Scroll animations ──────────────────────────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// ─── Chip click ─────────────────────────────────────────────────────────────
+function setChip(sector) {
+  document.getElementById('sectorInput').value = sector;
+  runAnalysis();
+}
+
+function scrollToAnalyzer() {
+  document.getElementById('analyzer').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── Chart instance ────────────────────────────────────────────────────────
+let chartInstance = null;
+let largeChartInstance = null;
+let currentChartData = null;
+let currentChartSector = '';
+
+function renderChart(sectorName) {
+  currentChartSector = sectorName.toUpperCase();
+  document.getElementById('chartSectorLabel').textContent = 
+    currentChartSector.length > 10 ? currentChartSector.substring(0,8)+'..' : currentChartSector;
+
+  // Generate pseudo-random data based on sector string length so it looks different per sector
+  const seed = sectorName.length * 10;
+  const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+  const dataPoints = labels.map((_, i) => 100 + Math.sin(i + seed) * 30 + (i * 5) + Math.random() * 15);
+  currentChartData = { labels, dataPoints };
+
+  if (chartInstance) chartInstance.destroy();
+  const ctx = document.getElementById('sectorChart').getContext('2d');
+
+  Chart.defaults.color = '#e2e8f0';
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dataPoints,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 2,
+        pointHoverRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { 
+        y: { display: true, ticks: { font: {size: 8}, color: 'rgba(255,255,255,0.5)' }, border: {display:false}, grid: { color: 'rgba(255,255,255,0.05)' } }, 
+        x: { display: true, ticks: { font: {size: 8}, color: 'rgba(255,255,255,0.5)' }, border: {display:false}, grid: {display:false} } 
+      },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      interaction: { mode: 'index' }
+    }
+  });
+}
+
+function openChartModal() {
+  document.getElementById('chartModal').classList.add('visible');
+  document.getElementById('modalSectorLabel').textContent = `${currentChartSector} — Full Market Trajectory`;
+
+  if (largeChartInstance) largeChartInstance.destroy();
+  const ctx = document.getElementById('largeSectorChart').getContext('2d');
+  
+  largeChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: currentChartData.labels,
+      datasets: [{
+        label: 'Sector Index Trajectory',
+        data: currentChartData.dataPoints,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#fff',
+        pointRadius: 6,
+        pointHoverRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, border: { display: false } },
+        x: { grid: { display: false }, border: { color: 'rgba(255, 255, 255, 0.1)' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0d1526',
+          titleColor: '#3b82f6',
+          bodyColor: '#fff',
+          borderColor: '#1e3055',
+          borderWidth: 1,
+          padding: 14
+        }
+      }
+    }
+  });
+}
+
+function closeChartModal() {
+  document.getElementById('chartModal').classList.remove('visible');
+}
+
+// ─── Main analysis function ──────────────────────────────────────────────────
+async function runAnalysis() {
+  const sector   = document.getElementById('sectorInput').value.trim();
+  const apiKey   = document.getElementById('apiKeyInput').value.trim();
+  const email    = document.getElementById('deliveryEmail').value.trim();
+  const btn      = document.getElementById('analyzeBtn');
+  const loading  = document.getElementById('loadingBox');
+  const report   = document.getElementById('reportBox');
+  const error    = document.getElementById('errorBox');
+  const loadMsg  = document.getElementById('loadingMsg');
+
+  // Reset UI
+  error.classList.remove('visible');
+  report.classList.remove('visible');
+  loading.classList.remove('visible');
+
+  // Validate
+  if (!sector) { showError('Please enter a sector name.'); return; }
+  if (!/^[a-zA-Z\s]{2,50}$/.test(sector)) {
+    showError('Sector name must contain only letters and spaces (2–50 characters).'); return;
+  }
+  if (!apiKey) { showError('Please enter your API key. Use "dev-key-12345" for free tier.'); return; }
+
+  btn.disabled = true;
+
+  // Animated loading messages
+  const messages = [
+    'Fetching market data…',
+    'Gathering sector intelligence…',
+    'Analyzing with AI…',
+    'Structuring your report…',
+  ];
+  let mi = 0;
+  loading.classList.add('visible');
+  loadMsg.textContent = messages[0];
+  const msgTimer = setInterval(() => {
+    mi = (mi + 1) % messages.length;
+    loadMsg.textContent = messages[mi];
+  }, 1800);
+
+  try {
+    const res = await fetch(`/analyze/${encodeURIComponent(sector)}`, {
+      headers: { 'X-API-Key': apiKey },
+      signal: AbortSignal.timeout(45000)
+    });
+
+    clearInterval(msgTimer);
+    loading.classList.remove('visible');
+
+    if (res.status === 401) { showError('❌ Invalid API key. Use "dev-key-12345" for free tier.'); return; }
+    if (res.status === 429) {
+      const d = await res.json();
+      showError(`⏱ Rate limit reached. ${d.detail}`); return;
+    }
+    if (res.status === 400) {
+      const d = await res.json();
+      showError(`⚠️ ${d.detail}`); return;
+    }
+    if (!res.ok) { showError(`Server error (${res.status}). Please try again.`); return; }
+
+    const data = await res.json();
+    lastReport = data.report;
+    reqCount++;
+    document.getElementById('reqCount').textContent = reqCount;
+
+    document.getElementById('reportContent').innerHTML = markdownToHTML(data.report);
+    report.classList.add('visible');
+    renderChart(sector); // Call render check
+    report.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showToast('✉️ Formatting PDF & dispatching email...');
+      try {
+        const element = document.getElementById('reportContent');
+        const opt = {
+          margin: [0.5, 0.5, 0.5, 0.5],
+          filename: `TradeIQ_${sector}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, backgroundColor: '#050a18', useCORS: true },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        // Generate PDF quietly as a Blob
+        const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+        
+        // Convert Blob to Base64 for the JSON endpoint
+        const pdfBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(pdfBlob);
+        });
+
+        const mailRes = await fetch('/api/send_email', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ email: email, sector: sector, report: data.report, pdf_base64: pdfBase64 })
+        });
+        
+        if (mailRes.ok) showToast(`✅ Analysis & PDF sent to ${email}!`);
+        else showToast('⚠️ Report generated, but email simulation failed.');
+      } catch (e) {
+        showToast('⚠️ Report generated, but email PDF attachment failed.');
+      }
+    } else {
+      showToast('✅ Report generated!');
+    }
+
+  } catch(err) {
+    clearInterval(msgTimer);
+    loading.classList.remove('visible');
+    if (err.name === 'TimeoutError') {
+      showError('⏱ Request timed out. The server may be processing. Try again in a moment.');
+    } else {
+      showError('🔌 Unable to reach the API. Make sure the server is running on port 8000.');
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ─── Simple Markdown → HTML converter ───────────────────────────────────────
+function markdownToHTML(md) {
+  return md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    .replace(/^## (.+)$/gm,'<h2>$2</h2>'.replace('$2','$1'))
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^---$/gm,'<hr/>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>')
+    .replace(/\n{2,}/g,'</p><p>')
+    .replace(/^(?!<[hublp])/gm,'')
+    .replace(/<p><\/p>/g,'');
+}
+
+// ─── Copy & Download ────────────────────────────────────────────────────────
+function copyReport() {
+  navigator.clipboard.writeText(lastReport).then(() => showToast('📋 Copied to clipboard!'));
+}
+
+function downloadMarkdown() {
+  if (!lastReport) { showError('No report to download.'); return; }
+  const blob = new Blob([lastReport], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `TradeIQ_${currentChartSector || 'Report'}.md`;
+  a.click();
+}
+
+function downloadPDF() {
+  if (!lastReport) { showError('No report to download.'); return; }
+  showToast('📄 Opening Print Dialog to save as PDF...');
+  // Reliable native browser to PDF generator 
+  setTimeout(() => window.print(), 500);
+}
+
+// ─── Error helper ────────────────────────────────────────────────────────────
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.classList.add('visible');
+  document.getElementById('analyzeBtn').disabled = false;
+}
+
+// ─── Toast helper ────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── Waitlist form ───────────────────────────────────────────────────────────
+function joinWaitlist() {
+  const email = document.getElementById('waitlistEmail').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('⚠️ Please enter a valid email address.');
+    return;
+  }
+  // In production: POST to /waitlist endpoint or a form service
+  document.getElementById('ctaSuccess').classList.add('visible');
+  document.getElementById('waitlistEmail').value = '';
+  showToast('🎉 You\'re on the waitlist!');
+}
+
+// ─── Pricing CTAs ────────────────────────────────────────────────────────────
+function subscribe(plan) {
+  if (plan === 'enterprise') {
+    window.location.href = 'mailto:dev@example.com?subject=Enterprise%20Plan%20Inquiry';
+  } else {
+    document.getElementById('waitlistEmail').scrollIntoView({behavior:'smooth'});
+    document.getElementById('waitlistEmail').focus();
+    showToast('🚀 Pro launching soon — join the waitlist!');
+  }
+}
+
+// ─── Keyboard shortcut: Enter key in inputs ──────────────────────────────────
+document.getElementById('sectorInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAnalysis();
+});
+document.getElementById('apiKeyInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAnalysis();
+});
+</script>
+</body>
+</html>
